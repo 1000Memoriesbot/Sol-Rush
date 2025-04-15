@@ -48,7 +48,11 @@
     const carImg = new Image();
     carImg.crossOrigin = "anonymous";
     carImg.src = "https://i.ibb.co/kBDtRmk/neoncar.png"; // Updated sprite with CORS support
-    carImg.onerror = () => { car.useFallback = true; };
+    carImg.onload = () => { console.log("Car image loaded successfully"); };
+    carImg.onerror = () => { 
+      console.log("Car image failed to load, using fallback");
+      car.useFallback = true; 
+    };
 
     const coinImg = new Image();
     coinImg.src = "https://cryptologos.cc/logos/solana-sol-logo.png?v=029";
@@ -179,6 +183,11 @@
         car.x -= car.speed;
       } else if (e.key === "ArrowRight" || e.key === "d") {
         car.x += car.speed;
+      }
+
+      // Play background music and sound effects once a key is pressed (to avoid autoplay issues)
+      if (!bgm.playing) {
+        bgm.play();
       }
     });
 
