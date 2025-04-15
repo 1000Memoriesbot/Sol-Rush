@@ -12,7 +12,7 @@
     }
     canvas {
       display: block;
-      background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
+      background: linear-gradient(to bottom, #121212, #2e2e2e);
     }
   </style>
 </head>
@@ -32,7 +32,8 @@
       y: canvas.height - 120,
       width: 50,
       height: 100,
-      speed: 7
+      speed: 7,
+      useFallback: false
     };
 
     const coins = [];
@@ -45,13 +46,20 @@
     const crashSound = document.getElementById("crashSound");
 
     const carImg = new Image();
-    carImg.src = "https://i.imgur.com/7yUVEkE.png"; // Neon car sprite
+    carImg.crossOrigin = "anonymous";
+    carImg.src = "https://i.ibb.co/kBDtRmk/neoncar.png"; // Updated sprite with CORS support
+    carImg.onerror = () => { car.useFallback = true; };
 
     const coinImg = new Image();
     coinImg.src = "https://cryptologos.cc/logos/solana-sol-logo.png?v=029";
 
     function drawCar() {
-      ctx.drawImage(carImg, car.x, car.y, car.width, car.height);
+      if (carImg.complete && !car.useFallback) {
+        ctx.drawImage(carImg, car.x, car.y, car.width, car.height);
+      } else {
+        ctx.fillStyle = "#00ffcc";
+        ctx.fillRect(car.x, car.y, car.width, car.height);
+      }
     }
 
     function spawnCoin() {
