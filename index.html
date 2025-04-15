@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solana Rush</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <audio id="bgm" src="https://files.catbox.moe/9fny3s.mp3" loop autoplay></audio>
+  <audio id="coinSound" src="https://freesound.org/data/previews/341/341695_3248244-lq.mp3"></audio>
+  <audio id="crashSound" src="https://freesound.org/data/previews/198/198841_285997-lq.mp3"></audio>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const car = {
+      x: canvas.width / 2,
+      y: canvas.height - 120,
+      width: 50,
+      height: 100,
+      speed: 7
+    };
+
+    const coins = [];
+    const obstacles = [];
+    const powerups = [];
+    let score = 0;
+    let gameOver = false;
+
+    const coinSound = document.getElementById("coinSound");
+    const crashSound = document.getElementById("crashSound");
+
+    const carImg = new Image();
+    carImg.src = "https://i.imgur.com/7yUVEkE.png"; // Neon car sprite
+
+    const coinImg = new Image();
+    coinImg.src = "https://cryptologos.cc/logos/solana-sol-logo.png?v=029";
+
+    function drawCar() {
+      ctx.drawImage(carImg, car.x, car.y, car.width, car.height);
+    }
+
+    function spawnCoin() {
+      coins.push({
+        x: Math.random() * (canvas.width - 30),
+        y: -30,
+        size: 30
+      });
+    }
+
+    function spawnObstacle() {
+      obstacles.push({
+        x: Math.random() * (canvas.width - 60),
+        y: -60,
+        width: 60,
+        height: 60
+      });
+    }
+
+    function spawnPowerup() {
+      powerups.push({
+        x: Math.random() * (canvas.width - 40),
+        y: -40,
+        size: 40,
+        active: true
+      });
+    }
+
+    function drawCoins() {
+      coins.forEach((coin, i) => {
+        ctx.drawImage(coinImg, coin.x, coin.y, coin.size, coin.size);
+        coin.y += 5;
+
+        if (
+          coin.x > car.x &&
+          coin.x < car.x + car.width &&
+          coin.y + coin.size > car.y &&
+          coin.y < car.y + car.height
+        ) {
+          coins.splice(i, 1);
+          score++;
+          coinSound.play();
+        }
+      });
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "#FF0033";
+      obstacles.forEach((obs, i) => {
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        obs.y += 6;
+
+        if (
+          obs.x < car.x + car.width &&
+          obs.x + obs.width > car.x &&
+          obs.y < car.y + car.height &&
+          obs.y + obs.height > car.y
+        ) {
+          gameOver = true;
+          crashSound.play();
+          localStorage.setItem("highScore", Math.max(score, getHighScore()));
+        }
+      });
+    }
+
+    function drawPowerups() {
+      ctx.fillStyle = "#00FFFF";
+      powerups.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(p.x + 20, p.y + 20, 20, 0, Math.PI * 2);
+        ctx.fill();
+        p.y += 4;
+
+        if (
+          p.x > car.x &&
+          p.x < car.x + car.width &&
+          p.y + p.size > car.y &&
+          p.y < car.y + car.height
+        ) {
+          powerups.splice(i, 1);
+          score += 5;
+        }
+      });
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "#00FFAA";
+      ctx.font = "24px monospace";
+      ctx.fillText(`SOL: ${score}`, 20, 40);
+      ctx.fillText(`HIGH: ${getHighScore()}`, 20, 70);
+    }
+
+    function getHighScore() {
+      return parseInt(localStorage.getItem("highScore")) || 0;
+    }
+
+    function gameLoop() {
+      if (gameOver) {
+        ctx.fillStyle = "#FF0000";
+        ctx.font = "48px monospace";
+        ctx.fillText("GAME OVER", canvas.width / 2 - 150, canvas.height / 2);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawCar();
+      drawCoins();
+      drawObstacles();
+      drawPowerups();
+      drawScore();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" || e.key === "a") {
+        car.x -= car.speed;
+      } else if (e.key === "ArrowRight" || e.key === "d") {
+        car.x += car.speed;
+      }
+    });
+
+    setInterval(spawnCoin, 1000);
+    setInterval(spawnObstacle, 1500);
+    setInterval(spawnPowerup, 6000);
+
+    gameLoop();
+  </script>
+</body>
+</html>
